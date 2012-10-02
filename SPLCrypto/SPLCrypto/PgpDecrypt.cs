@@ -48,7 +48,21 @@ namespace SPL.Crypto
 
             decryptAndVerify(inputStream, outputFile);
         }
+        
+        public void DecryptAndVerify(Stream inputStream, Stream outputStream)
+        {
+            if (inputStream == null)
+            {
+                throw new ArgumentNullException("inputStream", "inputStream is null.");
+            }
+            if (outputStream == null)
+            {
+                throw new ArgumentNullException("outputFile", "outputFile is null.");
+            }
 
+            decryptAndVerify(inputStream, outputStream);
+        }
+        
         #endregion
 
         #region Private Methods
@@ -67,6 +81,24 @@ namespace SPL.Crypto
                     {
                         Streams.PipeAll(literalDataStream, outputFile);
                     }
+                }
+            }
+
+            return;
+        }
+
+        private void decryptAndVerify(Stream inputStream, Stream outputStream)
+        {
+            PgpPublicKeyEncryptedData publicKeyED = extractPublicKeyEncryptedData(inputStream);
+            PgpObject message = getClearCompressedMessage(publicKeyED);
+
+            if (message is PgpCompressedData)
+            {
+                message = processCompressedMessage(message);
+                PgpLiteralData literalData = (PgpLiteralData)message;
+                using (Stream literalDataStream = literalData.GetInputStream())
+                {
+                    Streams.PipeAll(literalDataStream, outputStream);
                 }
             }
 
