@@ -1,8 +1,9 @@
 ﻿using Org.BouncyCastle.Bcpg.OpenPgp;
 using System;
 using System.IO;
-using System.Linq;
+//using System.Linq;
 using System.Text;
+using System.Collections;
 
 /// Code is provided as-is, as-written. I'm not an expert in cryptography, and I don't plan
 /// on releasing updates. Please review prior to using in anything critical.
@@ -81,15 +82,23 @@ namespace SPL.Crypto
                 // Note: You may need to use something other than the first key
                 //  in your key ring. Keep that in mind. 
                 // ex: .Where(k => !k.IsSigningKey)
+                /*
                 PgpSecretKey key = kRing.GetSecretKeys()
                     .Cast<PgpSecretKey>()
-                    //.Where(k => k.IsSigningKey)
-                    .Where(k => !k.IsSigningKey)
+                    .Where(k => k.IsSigningKey)
                     .FirstOrDefault();
-
+                
                 if (key != null)
                 {
                     return key;
+                }
+                */
+                IEnumerator ikeys = kRing.GetSecretKeys().GetEnumerator();
+                if(ikeys.MoveNext()){
+                    PgpSecretKey key=(PgpSecretKey)ikeys.Current;
+                    if(key.IsSigningKey){
+                        return key;
+                    }
                 }
             }
 
@@ -129,6 +138,7 @@ namespace SPL.Crypto
         {
             foreach (PgpPublicKeyRing kRing in publicKeyRingBundle.GetKeyRings())
             {
+            	/*
                 PgpPublicKey key = kRing.GetPublicKeys()
                     .Cast<PgpPublicKey>()
                     .Where(k => k.IsEncryptionKey)
@@ -137,6 +147,14 @@ namespace SPL.Crypto
                 if (key != null)
                 {
                     return key;
+                }
+                */
+                IEnumerator ikeys = kRing.GetPublicKeys().GetEnumerator();
+                if(ikeys.MoveNext()){
+                    PgpPublicKey key=(PgpPublicKey)ikeys.Current;
+                    if(key.IsEncryptionKey){
+                        return key;
+                    }
                 }
             }
 
